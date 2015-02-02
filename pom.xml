@@ -65,6 +65,8 @@
 		<!-- build modules/plugins/dpus -->
 		<module>core-dpus</module>
 		<module>master</module>
+		<!-- automatic schema install / update -->
+		<module>db-updater</module>
 	</modules>
 
 	<scm>
