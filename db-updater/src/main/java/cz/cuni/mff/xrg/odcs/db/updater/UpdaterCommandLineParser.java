@@ -46,18 +46,18 @@ public class UpdaterCommandLineParser {
             String connectionString = getOption("c", line, true);
             String driver = getOption("d", line, true);
 
-            DBUpdater updater = new DBUpdater(dbType, connectionString, driver);
-
             String user = getOption("u", line, true);
             String userPassword = getOption("p", line, true);
+
+            DBUpdater updater = new DBUpdater(dbType, connectionString, driver, user, userPassword);
 
             if (line.hasOption("C")) {
                 String admin = getOption("au", line, true);
                 String adminPassword = getOption("ap", line, true);
 
-                updater.createAndInitDB(admin, adminPassword, user, userPassword);
+                updater.createAndInitDB(admin, adminPassword);
             } else {
-                updater.startUpdate(user, userPassword);
+                updater.startUpdate();
             }
         } catch (ParseException e) {
             System.out.println("Unexpected exception:" + e.getMessage());

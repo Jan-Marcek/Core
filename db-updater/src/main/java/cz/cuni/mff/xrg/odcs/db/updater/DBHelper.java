@@ -38,8 +38,10 @@ public abstract class DBHelper {
      * 
      * @param conn
      * @throws SQLException
+     * @throws NumberFormatException
+     *          if the format the property is wrong
      */
-    public void checkCurrentDbVersion(Connection conn) throws SQLException {
+    public void checkCurrentDbVersion(Connection conn) throws SQLException, NumberFormatException {
         String query = "select p.value from properties as p where p.key = 'UV.Core.version'";
         Statement st = conn.createStatement();
         ResultSet result = st.executeQuery(query);
@@ -61,6 +63,10 @@ public abstract class DBHelper {
         
     }
 
+    public String getCurrentDbVersion() {
+        return currentDbVersion;
+    }
+
     public abstract void createDB(Connection conn, String dbName, String owner) throws SQLException;
 
     public abstract void createUser(Connection conn, String username, String password) throws SQLException;
@@ -70,12 +76,20 @@ public abstract class DBHelper {
     public void initDB(Connection conn) throws FileNotFoundException, SQLException {
         
         System.out.println("EXECUTING schema\n=====================");
-        InputStream in = getSchemaResourceInputStream();
-        runScript(in, conn);
+        runSchemaScript(conn);
         // don't need to close InputStream, runScript method does that through Scanner
         
         System.out.println("EXECUTING data\n=====================");
-        in = getDataResourceInputStream();
+        runDataScript(conn);
+    }
+    
+    protected void runSchemaScript(Connection conn) throws FileNotFoundException, SQLException {
+        InputStream in = getSchemaResourceInputStream();
+        runScript(in, conn);
+    }
+    
+    protected void runDataScript(Connection conn) throws FileNotFoundException, SQLException {
+        InputStream in = getDataResourceInputStream();
         runScript(in, conn);
     }
     
