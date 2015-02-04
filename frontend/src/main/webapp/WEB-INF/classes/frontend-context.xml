@@ -45,6 +45,15 @@
     <bean id="emailSender" class="cz.cuni.mff.xrg.odcs.commons.app.communication.EmailSender">
         <constructor-arg ref="configuration"/>
     </bean>
+    
+    <!-- bean for initializing DB or running updating scripts -->
+    <bean id="dbUpdater" class="cz.cuni.mff.xrg.odcs.db.updater.DBUpdater">
+    	<constructor-arg name="dbType" value="${database.sql.platform}" />
+    	<constructor-arg name="connectionString" value="${database.sql.url}" />
+    	<constructor-arg name="driver" value="${database.sql.driver}" />
+    	<constructor-arg name="username" value="${database.sql.user}" />
+    	<constructor-arg name="password" value="${database.sql.password}" />
+    </bean>
 
     <!-- bean for notification -->
     <bean class="cz.cuni.mff.xrg.odcs.commons.app.module.impl.FileNotifierClient"/>

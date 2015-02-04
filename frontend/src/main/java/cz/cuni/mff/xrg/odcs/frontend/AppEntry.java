@@ -1,5 +1,7 @@
 package cz.cuni.mff.xrg.odcs.frontend;
 
+import java.io.FileNotFoundException;
+import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Map;
 
@@ -28,9 +30,12 @@ import com.vaadin.ui.Notification.Type;
 
 import cz.cuni.mff.xrg.odcs.commons.app.auth.AuthenticationContext;
 import cz.cuni.mff.xrg.odcs.commons.app.facade.RuntimePropertiesFacade;
+import cz.cuni.mff.xrg.odcs.commons.app.properties.RuntimeProperty;
+import cz.cuni.mff.xrg.odcs.db.updater.DBUpdater;
 import cz.cuni.mff.xrg.odcs.frontend.auth.AuthenticationService;
 import cz.cuni.mff.xrg.odcs.frontend.auxiliaries.DecorationHelper;
 import cz.cuni.mff.xrg.odcs.frontend.auxiliaries.RefreshManager;
+import cz.cuni.mff.xrg.odcs.frontend.gui.DbUpdateLayout;
 import cz.cuni.mff.xrg.odcs.frontend.gui.MenuLayout;
 import cz.cuni.mff.xrg.odcs.frontend.gui.ModifiableComponent;
 import cz.cuni.mff.xrg.odcs.frontend.gui.views.Initial;
@@ -80,9 +85,24 @@ public class AppEntry extends com.vaadin.ui.UI {
 
     @Autowired
     private BackendHeartbeat heartbeatService;
+    
+    @Autowired
+    private DBUpdater dbUpdater;
 
     @Override
     protected void init(com.vaadin.server.VaadinRequest request) {
+        
+        try {
+            if (dbUpdater.needsInitialization()) {
+                DbUpdateLayout layout = new DbUpdateLayout();
+                layout.build(dbUpdater);
+                setContent(layout);
+                return;
+            }
+        } catch (SQLException e) {
+            LOG.error("Error while checking db status by db-updater: " + e.getMessage());
+        }
+        
         // Retrieve Locale from Runtime properties, and set it in LocaleContextHolder
         Locale locale = runtimePropertiesFacade.getLocale();
         LocaleContextHolder.setLocale(locale);

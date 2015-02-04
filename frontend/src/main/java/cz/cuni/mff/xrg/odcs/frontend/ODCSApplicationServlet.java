@@ -1,6 +1,8 @@
 package cz.cuni.mff.xrg.odcs.frontend;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Date;
 
 import javax.servlet.ServletException;
@@ -23,6 +25,7 @@ import com.vaadin.server.ServiceException;
 import com.vaadin.server.VaadinServletService;
 
 import cz.cuni.mff.xrg.odcs.commons.app.facade.ModuleFacade;
+import cz.cuni.mff.xrg.odcs.db.updater.DBUpdater;
 import cz.cuni.mff.xrg.odcs.frontend.auth.AuthenticationService;
 
 /**
@@ -51,6 +54,21 @@ public class ODCSApplicationServlet extends SpringVaadinServlet {
 
         // Preload all DPUs on servlet startup, so openning them is fast.
         ApplicationContext context = SpringApplicationContext.getApplicationContext();
+        
+        // checking status of Database
+        DBUpdater dbUpdater = context.getBean(DBUpdater.class);
+        try {
+            if (dbUpdater.needsInitialization()) {
+                // DB not initialized yet
+                return service;
+            } else {
+                dbUpdater.startUpdate();
+            }
+        } catch (FileNotFoundException | SQLException e) {
+            LOG.error("DBUpdater error", e);
+        }
+        
+        // only id Databas is initialized and the right version, try to preload dpus
         try {
             context.getBean(ModuleFacade.class).preLoadAllDPUs();
         } catch (TransactionException | DatabaseException ex) {

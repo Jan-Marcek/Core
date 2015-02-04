@@ -67,6 +67,11 @@
 			<artifactId>uv-dataunit-helpers</artifactId>
 			<version>${uv-dataunit-helpers.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>cz.cuni.mff.xrg.odcs</groupId>
+			<artifactId>db-updater</artifactId>
+			<version>1.0.0</version>
+		</dependency>
 		<dependency> <!-- JUnit dependency -->
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
