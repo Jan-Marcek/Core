@@ -209,6 +209,7 @@ public class DBUpdater {
             conn = DriverManager.getConnection(connectionString, username, password);
             return true;
         } catch (SQLException e) {
+            System.err.println("Check DB exists: Error while connecting to DB: " + e.getMessage());
             return false;
         } finally {
             if (conn != null) {

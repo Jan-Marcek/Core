@@ -1,11 +1,8 @@
 package cz.cuni.mff.xrg.odcs.backend;
 
 import java.io.File;
+import java.sql.SQLException;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.h2.store.fs.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +24,12 @@ import cz.cuni.mff.xrg.odcs.commons.app.conf.AppConfig;
 import cz.cuni.mff.xrg.odcs.commons.app.conf.ConfigProperty;
 import cz.cuni.mff.xrg.odcs.commons.app.execution.log.Log;
 import cz.cuni.mff.xrg.odcs.commons.app.facade.ModuleFacade;
+import cz.cuni.mff.xrg.odcs.db.updater.DBUpdater;
 
 /**
  * Backend entry point.
  * 
- * @author Petyr
+ * @author Petyr, mvi
  */
 public class AppEntry {
 
@@ -39,6 +37,13 @@ public class AppEntry {
      * Path to the spring configuration file.
      */
     private final static String SPRING_CONFIG_FILE = "backend-context.xml";
+    
+    /**
+     * Path to the spring configuration file. This configuration is only used
+     * to check if DB was initialized and then SPRING_CONFIG_FILE is used to
+     * initialize context.
+     */
+    private final static String SPRING_CHECK_CONFIG_FILE = "backend-dbcheck-context.xml";
 
     /**
      * Logger class.
@@ -50,6 +55,8 @@ public class AppEntry {
      */
     private AbstractApplicationContext context = null;
 
+    private DBUpdater dbUpdater;
+    
     /**
      * Initialise spring and load configuration.
      */
@@ -193,14 +200,17 @@ public class AppEntry {
      * @param args
      */
     private void run(String[] args) {
+        if (!dbInitialized()) {
+            return;
+        }
+        
         // initialise
         initSpring();
-
+        
         // the log back is not initialised here .. 
         // we add file appender
         initLogbackAppender(context.getBean(AppConfig.class));
-
-
+        
         // the sql appender cooperate with spring, so we need spring first
         initLogbackSqlAppender();
 
@@ -231,6 +241,28 @@ public class AppEntry {
             } catch (InterruptedException ex) {
             }
         }
+    }
+
+    /**
+     * Checks if Database was initialized
+     * 
+     * @author mvi
+     * 
+     * @return false if DB wasn't initialized or error occurred while connecting to DB, true otherwise
+     */
+    private boolean dbInitialized() {
+        try {
+            context = new ClassPathXmlApplicationContext(SPRING_CHECK_CONFIG_FILE);
+            dbUpdater = context.getBean(DBUpdater.class);
+            if (dbUpdater.needsInitialization()) {
+                LOG.error("DATABASE NEEDS TO BE INITIALIZED (can be done through frontend)");
+                return false;
+            }
+        } catch (SQLException e) {
+            LOG.error("Error while checking db status by db-updater: " + e.getMessage());
+            return false;
+        }
+        return true;
     }
 
     public static void main(String[] args) {
