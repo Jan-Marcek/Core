@@ -1,11 +1,13 @@
 package cz.cuni.mff.xrg.odcs.backend;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Locale;
 import java.sql.SQLException;
 
 import cz.cuni.mff.xrg.odcs.commons.app.i18n.LocaleHolder;
 import eu.unifiedviews.commons.i18n.DataunitLocaleHolder;
+
 import org.h2.store.Data;
 import org.h2.store.fs.FileUtils;
 import org.slf4j.Logger;
@@ -273,11 +275,18 @@ public class AppEntry {
             context = new ClassPathXmlApplicationContext(SPRING_CHECK_CONFIG_FILE);
             dbUpdater = context.getBean(DBUpdater.class);
             if (dbUpdater.needsInitialization()) {
+                // can't start init, because it needs ADMIN username and password
+                // which we can't get => frontend asks for it through gui
                 LOG.error("DATABASE NEEDS TO BE INITIALIZED (can be done through frontend)");
                 return false;
             }
+            // we can start update with ONLY username and pass from property file
+            dbUpdater.startUpdate();
         } catch (SQLException e) {
-            LOG.error("Error while checking db status by db-updater: " + e.getMessage());
+            LOG.error("Error while checking db status / starting update scripts by db-updater: " + e.getMessage());
+            return false;
+        } catch (FileNotFoundException e) {
+            LOG.error("Error while starting updating scripts: ", e.getMessage());
             return false;
         }
         return true;
