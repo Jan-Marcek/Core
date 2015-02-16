@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cz.cuni.mff.xrg.odcs.commons.app.i18n.LocaleHolder;
+import eu.unifiedviews.dpu.config.DPULocalizable;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,6 +186,12 @@ public class DPUModuleManipulator {
         newTemplate.setName(dpuName);
         newTemplate.setJarDescription(jarDescription);
         newTemplate.setShareType(ShareType.PRIVATE);
+
+        // if DPU is localizable
+        if(dpuObject instanceof DPULocalizable) {
+            DPULocalizable localizable = (DPULocalizable) dpuObject;
+            newTemplate.setName(localizable.getLocalizedName(LocaleHolder.getLocale()));
+        }
 
         // validate
         if (validators != null) {
