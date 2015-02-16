@@ -1,8 +1,12 @@
 package cz.cuni.mff.xrg.odcs.backend;
 
 import java.io.File;
+import java.util.Locale;
 import java.sql.SQLException;
 
+import cz.cuni.mff.xrg.odcs.commons.app.i18n.LocaleHolder;
+import eu.unifiedviews.commons.i18n.DataunitLocaleHolder;
+import org.h2.store.Data;
 import org.h2.store.fs.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +28,7 @@ import cz.cuni.mff.xrg.odcs.commons.app.conf.AppConfig;
 import cz.cuni.mff.xrg.odcs.commons.app.conf.ConfigProperty;
 import cz.cuni.mff.xrg.odcs.commons.app.execution.log.Log;
 import cz.cuni.mff.xrg.odcs.commons.app.facade.ModuleFacade;
+import cz.cuni.mff.xrg.odcs.commons.app.facade.RuntimePropertiesFacade;
 import cz.cuni.mff.xrg.odcs.db.updater.DBUpdater;
 
 /**
@@ -194,6 +199,16 @@ public class AppEntry {
         logbackLogger.addAppender(sqlAppender);
     }
 
+    private void initLocale() {
+        // retrieve runtime properties
+        RuntimePropertiesFacade runtimePropertiesFacade = (RuntimePropertiesFacade) context.getBean("runtimePropertiesFacade");
+        Locale locale = runtimePropertiesFacade.getLocale();
+        // set retrieved locale to LocaleHolders
+        LocaleHolder.setLocale(locale);
+        DataunitLocaleHolder.setLocale(locale);
+        LOG.info("Using locale: " + LocaleHolder.getLocale());
+    }
+
     /**
      * Main execution method.
      * 
@@ -207,10 +222,13 @@ public class AppEntry {
         // initialise
         initSpring();
         
+        // initialize locale settings from DB, so we need spring first
+        initLocale();
+
         // the log back is not initialised here .. 
         // we add file appender
         initLogbackAppender(context.getBean(AppConfig.class));
-        
+
         // the sql appender cooperate with spring, so we need spring first
         initLogbackSqlAppender();
 
